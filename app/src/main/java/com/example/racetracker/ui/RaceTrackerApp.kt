@@ -15,7 +15,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -44,13 +43,15 @@ import kotlinx.coroutines.launch
 fun RaceTrackerApp(modifier: Modifier = Modifier) {
     val playerOne = remember { RaceParticipant(name = "Player 1", progressIncrement = 1) }
     val playerTwo = remember { RaceParticipant(name = "Player 2", progressIncrement = 2) }
+    val playerThree = remember { RaceParticipant(name = "Player 3", progressIncrement = 3) }
     var raceInProgress by remember { mutableStateOf(false) }
 
     if (raceInProgress) {
-        LaunchedEffect(playerOne, playerTwo) {
+        LaunchedEffect(playerOne, playerTwo, playerThree) {
             coroutineScope {
                 launch { playerOne.run() }
                 launch { playerTwo.run() }
+                launch { playerThree.run() }
             }
             raceInProgress = false
         }
@@ -58,6 +59,7 @@ fun RaceTrackerApp(modifier: Modifier = Modifier) {
     RaceTrackerScreen(
         playerOne = playerOne,
         playerTwo = playerTwo,
+        playerThree = playerThree,
         isRunning = raceInProgress,
         onRunStateChange = { raceInProgress = it },
         modifier = modifier
@@ -73,6 +75,7 @@ fun RaceTrackerApp(modifier: Modifier = Modifier) {
 private fun RaceTrackerScreen(
     playerOne: RaceParticipant,
     playerTwo: RaceParticipant,
+    playerThree: RaceParticipant,
     isRunning: Boolean,
     onRunStateChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
@@ -114,10 +117,21 @@ private fun RaceTrackerScreen(
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.size(dimensionResource(R.dimen.padding_large)))
+            StatusIndicator(
+                participantName = playerThree.name,
+                currentProgress = playerThree.currentProgress,
+                maxProgress = stringResource(R.string.progress_percentage, playerThree.maxProgress),
+                progressFactor = playerThree.progressFactor,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.size(dimensionResource(R.dimen.padding_large)))
             RaceControls(
-                isRunning = isRunning, onRunStateChange = onRunStateChange, onReset = {
+                isRunning = isRunning,
+                onRunStateChange = onRunStateChange,
+                onReset = {
                     playerOne.reset()
                     playerTwo.reset()
+                    playerThree.reset()
                     onRunStateChange(false)
                 }, modifier = Modifier.fillMaxWidth()
             )
@@ -125,7 +139,6 @@ private fun RaceTrackerScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun StatusIndicator(
     participantName: String,
@@ -148,16 +161,15 @@ private fun StatusIndicator(
                     .clip(RoundedCornerShape(dimensionResource(R.dimen.progress_indicator_corner_radius)))
             )
             Row(
-                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     text = stringResource(R.string.progress_percentage, currentProgress),
                     textAlign = TextAlign.Start,
                     modifier = Modifier.weight(1f)
                 )
-                Text(
-                    text = maxProgress, textAlign = TextAlign.End, modifier = Modifier.weight(1f)
-                )
+                Text(text = maxProgress, textAlign = TextAlign.End, modifier = Modifier.weight(1f))
             }
         }
     }
@@ -174,10 +186,7 @@ private fun RaceControls(
         modifier = modifier.padding(top = dimensionResource(R.dimen.padding_medium)),
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.padding_medium))
     ) {
-        Button(
-            onClick = { onRunStateChange(!isRunning) },
-            modifier = Modifier.fillMaxWidth(),
-        ) {
+        Button(onClick = { onRunStateChange(!isRunning) }, modifier = Modifier.fillMaxWidth()) {
             Text(
                 when (isRunning) {
                     true -> stringResource(R.string.pause)
