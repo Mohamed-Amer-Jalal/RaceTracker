@@ -28,9 +28,9 @@ class RaceParticipant(
                 delay(progressDelayMillis)
                 currentProgress += progressIncrement
             }
-        } catch (error: CancellationException) {
-            Log.e("RaceParticipant", "$name: ${error.message}")
-            throw error
+        } catch (e: CancellationException) {
+            Log.e("RaceParticipant", "$name: ${e.message}")
+            throw e
         }
     }
 
@@ -39,5 +39,4 @@ class RaceParticipant(
     }
 }
 
-val RaceParticipant.progressFactor: Float
-    get() = currentProgress / maxProgress.toFloat()
+val RaceParticipant.progressFactor: Float get() = currentProgress / maxProgress.toFloat()
